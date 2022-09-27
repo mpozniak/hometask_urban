@@ -10,6 +10,12 @@ variable "gcp_project" {
   description = "GCP Project name"
 }
 
+# Environment name
+variable "environment" {
+  type        = string
+  description = "Infrastructure environment name"
+}
+
 # GCP auth file
 variable "gcp_auth_file" {
   type        = string
