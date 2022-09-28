@@ -13,5 +13,9 @@ RUN ["npm", "run", "build"]
 # Expose app port
 EXPOSE 3000
 
+# Set owner user 'node'
+RUN chown -R node:node /usr/src/app
+USER node
+
 # App container ENTRYPOINT
 CMD ["node", "."]
