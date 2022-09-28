@@ -51,3 +51,21 @@ variable "k8s_cluster_service_ip_range" {
     "cidr" = "172.22.64.0/18"
   }
 }
+
+variable "k8s_cluster_min_node_count" {
+  type        = number
+  description = "Minimum number of nodes per zone in the NodePool. Must be >=0 and <= max_node_count. Cannot be used with total limits"
+  default     = 1
+}
+
+variable "k8s_cluster_max_node_count" {
+  type        = number
+  description = "Maximum number of nodes per zone in the NodePool. Must be >= min_node_count. Cannot be used with total limits"
+  default     = 2
+}
+
+variable "k8s_cluster_node_machine_type" {
+  type        = string
+  description = "k8s node instances type"
+  default     = "e2-small"
+}
