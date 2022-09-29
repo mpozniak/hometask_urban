@@ -29,14 +29,14 @@ jobs:
     steps:
       
       - name: Setup app version [condition %1]
-        if: ${{ inputs.version }} == 'v0.0.0'
+        if: ${{ inputs.version == 'v0.0.0' }}
         shell: bash
         run: |
           echo Please specify the app version. Wrong app version: ${{ inputs.version }}
           exit 1
       
       - name: Setup app version [condition %2]
-        if: ${{ inputs.version }} != 'v0.0.0'
+        if: ${{ inputs.version != 'v0.0.0' }}
         shell: bash
         run: |
           APP_VERSION=$(echo ${{ inputs.version }} | tr '[:upper:]' '[:lower:]')
@@ -75,7 +75,7 @@ jobs:
       - name: 'Test gcloud CLI'
         run: |
           gcloud info
-          gcloud storage buckets describe gs://${{ secret.BUCKET_NAME }} --format="default(versioning)"
+          gcloud storage buckets describe gs://${{ secrets.BUCKET_NAME }} --format="default(versioning)"
 
       # Configure Docker to use the gcloud command-line tool as a credential
       - name: Configure Dcoker AUTH
@@ -139,7 +139,7 @@ jobs:
       - name: Terraform Init
         run: |
           cd infrastructure/
-          terraform init -input=false -backend-config="bucket=${{ secret.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}/terraform.tfstate"
+          terraform init -input=false -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}/terraform.tfstate"
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
       
