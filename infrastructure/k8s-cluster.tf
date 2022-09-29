@@ -1,3 +1,5 @@
+data "google_client_config" "this" {}
+
 resource "google_container_cluster" "this" {
   name                     = "${var.environment}-k8s-cluster"
   location                 = var.gcp_region
