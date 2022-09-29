@@ -104,7 +104,7 @@ jobs:
         shell: bash
         run: |
           cd infrastructure/
-          terraform plan
+          terraform plan -out tfplan.binary
         env:
           TF_VAR_gcp_project: ${{ env.PROJECT }}
           TF_VAR_environment: ${{ needs.setup.outputs.environment }}
@@ -114,7 +114,7 @@ jobs:
         shell: bash
         run: |
           cd infrastructure/
-          terraform apply -auto-approve
+          terraform apply -compact-warnings -auto-approve ./tfplan.binary
         env:
           TF_VAR_gcp_project: ${{ env.PROJECT }}
           TF_VAR_environment: ${{ needs.setup.outputs.environment }}
@@ -225,7 +225,7 @@ jobs:
         shell: bash
         run: |
           cd infrastructure/app-level
-          terraform plan
+          terraform plan -out tfplan.binary
         env:
           TF_VAR_gcp_project: ${{ env.PROJECT }}
           TF_VAR_environment: ${{ needs.setup.outputs.environment }}
@@ -237,7 +237,7 @@ jobs:
         shell: bash
         run: |
           cd infrastructure/app-level
-          terraform apply -auto-approve
+          terraform apply -compact-warnings -auto-approve ./tfplan.binary
         env:
           TF_VAR_gcp_project: ${{ env.PROJECT }}
           TF_VAR_environment: ${{ needs.setup.outputs.environment }}
