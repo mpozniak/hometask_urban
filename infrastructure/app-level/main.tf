@@ -18,5 +18,5 @@ module "urban_app" {
   gcp_region                     = data.terraform_remote_state.infrastructure.outputs.gcp_region
   gcp_project                    = var.gcp_project
   environment                    = var.environment
-  project_container_registry_uri = data.terraform_remote_state.infrastructure.outputs.project_container_registry_uri
+  project_container_registry_uri = "gcr.io/${var.gcp_project}/${var.application_name}:${var.application_version}"
 }
