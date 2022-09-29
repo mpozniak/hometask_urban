@@ -31,7 +31,7 @@ resource "kubernetes_deployment" "application" {
       spec {
         container {
           image = "${google_container_registry.this.bucket_self_link}/urban_app:latest"
-          name  = "urban_app"
+          name  = "urban-app"
 
           resources {
             limits = {
@@ -46,7 +46,7 @@ resource "kubernetes_deployment" "application" {
           port {
             container_port = 3000
             host_port      = 80
-            protocol       = "tcp"
+            protocol       = "TCP"
           }
 
           liveness_probe {

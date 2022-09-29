@@ -19,6 +19,7 @@ resource "google_container_node_pool" "this" {
   node_config {
     preemptible  = false
     machine_type = var.k8s_cluster_node_machine_type
+    disk_size_gb = 30
 
     labels = {
       role        = "general"

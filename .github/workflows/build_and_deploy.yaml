@@ -1,0 +1,171 @@
+name: "Build app Docker image and Deploy app"
+
+env:
+  PROJECT: ${{ secrets.GCP_PROJECT }}
+  APP_NAME: "urban"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        type: choice
+        default: "development"
+        options:
+        - development
+        - staging
+        - production
+        required: true
+      version:
+        description: 'Application version (vMajor.Minor.Fix)'
+        type: string
+        required: false
+        default: v0.0.0
+
+jobs:
+  setup:
+    name: "Prepare configuration/variables"
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: Setup app version [condition %1]
+        if: ${{ inputs.version }} == 'v0.0.0'
+        shell: bash
+        run: |
+          echo Please specify the app version. Wrong app version: ${{ inputs.version }}
+          exit 1
+      
+      - name: Setup app version [condition %2]
+        if: ${{ inputs.version }} != 'v0.0.0'
+        shell: bash
+        run: |
+          APP_VERSION=$(echo ${{ inputs.version }} | tr '[:upper:]' '[:lower:]')
+          echo The app version is: ${{ inputs.version }}
+          echo "app_version=${{ inputs.version }}" >> $GITHUB_ENV
+      
+      - name: Prepare outputs
+        id: prepare_outputs
+        shell: bash
+        run: |
+          echo "::set-output name=environment::${{ inputs.environment }}"
+          echo "::set-output name=app_version::${{ env.app_version }}"
+
+    outputs:
+      environment: ${{ steps.prepare_outputs.outputs.environment }}
+      app_version: ${{ steps.prepare_outputs.outputs.app_version }}
+
+
+  build_app_image:
+    if: ${{ success() }}
+    needs: [setup]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@master
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      # Setup GCP CLI tools
+      - uses: google-github-actions/setup-gcloud@v0
+        id: setup_gcloud
+      
+      - name: 'Test gcloud CLI'
+        run: |
+          gcloud info
+          gcloud storage buckets describe gs://${{ secret.BUCKET_NAME }} --format="default(versioning)"
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      - name: Configure Dcoker AUTH
+        shell: bash
+        run: |
+          gcloud --quiet auth configure-docker
+
+      # Get the GKE credentials so we can deploy to the cluster
+      # - uses: google-github-actions/get-gke-credentials@v0
+      #   id: get_gke_credentials
+      #   with:
+      #     cluster_name: ${{ secrets.GKE_CLUSTER }}
+      #     location: ${{ secrets.GCP_ZONE }}
+      #     credentials: ${{ secrets.GKE_SA_KEY }}
+
+      # Build Docker image
+      - name: Build Docker image
+        id: docker_build
+        shell: bash
+        run: |
+          APP_VERSION=${{ needs.setup.outputs.app_version }}
+          docker build \
+            --tag gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${APP_VERSION} \
+            -f application/Dockerfile \
+            application/.
+
+      # Push the Docker image to Google Container Registry
+      - name: Push app Docker image
+        id: docker_push
+        shell: bash
+        run: |
+          APP_VERSION=${{ needs.setup.outputs.app_version }}
+          docker push gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${APP_VERSION}
+      
+      # Vulnerability and securtiy scan/check
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${APP_VERSION}
+          format: 'table'
+          vuln-type: 'os,library'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          security-checks: 'vuln'
+
+  deploy:
+    if: ${{ success() }}
+    needs: [setup, build_app_image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@master
+
+      # Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.3.0
+      
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: |
+          cd infrastructure/
+          terraform init -input=false -backend-config="bucket=${{ secret.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}/terraform.tfstate"
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+      
+      - name: Terraform validation
+        run: terraform validate
+
+      # Checks that all Terraform configuration files adhere to a canonical format
+      - name: Terraform Format
+        run: |
+          cd infrastructure/
+          terraform fmt -recursive -no-color -diff -check -list=true .
+
+      # Generates an execution plan for Terraform
+      - name: Terraform Plan
+        run: |
+          cd infrastructure/
+          terraform plan
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      # On push to main, build or change infrastructure according to Terraform configuration files
+      # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          cd infrastructure/
+          terraform apply -auto-approve
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
