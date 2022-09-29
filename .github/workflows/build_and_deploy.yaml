@@ -95,10 +95,9 @@ jobs:
       - name: Build Docker image
         id: docker_build
         shell: bash
-        run: |
-          APP_VERSION=${{ needs.setup.outputs.app_version }}
+        run: |-
           docker build \
-            --tag gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${APP_VERSION} \
+            --tag gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${{ needs.setup.outputs.app_version }} \
             -f application/Dockerfile \
             application/.
 
@@ -128,6 +127,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@master
 
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      # Setup GCP CLI tools
+      - uses: google-github-actions/setup-gcloud@v0
+        id: setup_gcloud
+        with:
+          export_default_credentials: true
+      
       # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -136,35 +146,42 @@ jobs:
       
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
+        shell: bash
         run: |
           cd infrastructure/
           terraform init -input=false -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}/terraform.tfstate"
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-      
+
       - name: Terraform validation
-        run: terraform validate
+        shell: bash
+        run: |
+          cd infrastructure/
+          terraform validate
 
       # Checks that all Terraform configuration files adhere to a canonical format
       - name: Terraform Format
+        shell: bash
         run: |
           cd infrastructure/
           terraform fmt -recursive -no-color -diff -check -list=true .
 
       # Generates an execution plan for Terraform
       - name: Terraform Plan
+        shell: bash
         run: |
           cd infrastructure/
           terraform plan
         env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          # GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+          TF_VAR_gcp_project: ${{ secrets.PROJECT }}
+          TF_VAR_environment: ${{ needs.setup.outputs.environment }}
 
-      # On push to main, build or change infrastructure according to Terraform configuration files
-      # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+      # Apply terraform resources
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        shell: bash
         run: |
           cd infrastructure/
           terraform apply -auto-approve
         env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          # GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+          TF_VAR_gcp_project: ${{ secrets.PROJECT }}
+          TF_VAR_environment: ${{ needs.setup.outputs.environment }}
