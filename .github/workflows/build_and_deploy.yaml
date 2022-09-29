@@ -107,15 +107,14 @@ jobs:
         id: docker_push
         shell: bash
         run: |
-          APP_VERSION=${{ needs.setup.outputs.app_version }}
-          docker push gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${APP_VERSION}
+          docker push gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${{ needs.setup.outputs.app_version }}
       
       # Vulnerability and securtiy scan/check
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'image'
-          image-ref: gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${APP_VERSION}
+          image-ref: gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${{ needs.setup.outputs.app_version }}
           format: 'table'
           vuln-type: 'os,library'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
