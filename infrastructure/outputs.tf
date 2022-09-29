@@ -8,17 +8,34 @@ output "k8s_cluster_host" {
   description = "GKE Cluster Host"
 }
 
+output "k8s_cluster_token" {
+  value       = data.google_client_config.this.access_token
+  description = "GKE Cluster Host token"
+  sensitive   = true
+}
+
+output "k8s_cluster_ca_certificate" {
+  value       = google_container_cluster.this.master_auth.0.cluster_ca_certificate
+  description = "GKE Cluster CA Certificate"
+  sensitive   = true
+}
+
 output "project_container_registry_uri" {
   value       = google_container_registry.this.bucket_self_link
   description = "The URI of the created container registry"
 }
 
-# Display load balancer hostname
-output "load_balancer_hostname" {
-  value = kubernetes_ingress.this.status.0.load_balancer.0.ingress.0.hostname
+output "gcp_region" {
+  value       = var.gcp_region
+  description = "GCP Infrastructure region"
 }
 
-# Display load balancer IP
-output "load_balancer_ip" {
-  value = kubernetes_ingress.this.status.0.load_balancer.0.ingress.0.ip
+output "gcp_project" {
+  value       = var.gcp_project
+  description = "GCP Project name"
+}
+
+output "gcp_project_environment" {
+  value       = var.environment
+  description = "GCP Project environment"
 }

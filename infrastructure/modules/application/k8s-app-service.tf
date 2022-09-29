@@ -1,7 +1,7 @@
 resource "kubernetes_service" "this" {
   metadata {
-    name      = "${var.environment}-k8s-app-ingress-service"
-    namespace = "${var.gcp_project}-${var.environment}"
+    name      = "${var.environment}-${var.application_name}-ingress-service"
+    namespace = "${var.environment}-${var.application_name}-namespace"
   }
   spec {
     selector = {
@@ -10,8 +10,8 @@ resource "kubernetes_service" "this" {
     }
 
     port {
-      port        = 80
-      target_port = 3000
+      port        = var.app_host_port
+      target_port = var.app_container_port
       protocol    = "TCP"
     }
     type = "NodePort"

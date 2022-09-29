@@ -17,12 +17,6 @@ variable "environment" {
   description = "Infrastructure environment name"
 }
 
-# GCP auth file
-# variable "gcp_auth_file" {
-#   type        = string
-#   description = "GCP authentication file"
-# }
-
 variable "k8s_cluster_subnet_ip_range" {
   type        = string
   description = "GC subnetwork IP CIDR range"

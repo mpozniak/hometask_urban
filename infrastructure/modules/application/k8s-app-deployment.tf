@@ -1,11 +1,9 @@
-data "google_client_config" "this" {}
-
 resource "kubernetes_deployment" "application" {
   metadata {
-    name      = "${var.environment}-k8s-app-deployment"
-    namespace = "${var.gcp_project}-${var.environment}"
+    name      = "${var.environment}-${var.application_name}-deployment"
+    namespace = "${var.environment}-${var.application_name}-namespace"
     labels = {
-      app = "UrbanApp"
+      app = var.application_label
       env = var.environment
     }
   }
@@ -15,7 +13,7 @@ resource "kubernetes_deployment" "application" {
 
     selector {
       match_labels = {
-        app = "UrbanApp"
+        app = var.application_label
         env = var.environment
       }
     }
@@ -23,20 +21,20 @@ resource "kubernetes_deployment" "application" {
     template {
       metadata {
         labels = {
-          app = "UrbanApp"
+          app = var.application_label
           env = var.environment
         }
       }
 
       spec {
         container {
-          image = "${google_container_registry.this.bucket_self_link}/urban_app:latest"
-          name  = "urban-app"
+          image = "${var.project_container_registry_uri}/${var.application_name}:${var.application_version}"
+          name  = var.application_name
 
           resources {
             limits = {
-              cpu    = "0.5"
-              memory = "256Mi"
+              cpu    = var.app_limits_cpu
+              memory = var.app_limits_memory
             }
             requests = {
               cpu    = "250m"
@@ -44,15 +42,15 @@ resource "kubernetes_deployment" "application" {
             }
           }
           port {
-            container_port = 3000
-            host_port      = 80
+            container_port = var.app_container_port
+            host_port      = var.app_host_port
             protocol       = "TCP"
           }
 
           liveness_probe {
             http_get {
-              path = "/"
-              port = 3000
+              path = var.app_liveness_probe_path
+              port = var.app_container_port
 
               http_header {
                 name  = "X-Custom-Header"

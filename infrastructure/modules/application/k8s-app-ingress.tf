@@ -1,8 +1,8 @@
 resource "kubernetes_ingress" "this" {
   wait_for_load_balancer = true
   metadata {
-    name      = "${var.environment}-k8s-ingress"
-    namespace = "${var.gcp_project}-${var.environment}"
+    name      = "${var.environment}-${var.application_name}-ingress"
+    namespace = "${var.environment}-${var.application_name}-namespace"
     annotations = {
       "kubernetes.io/ingress.class" = "nginx"
     }
