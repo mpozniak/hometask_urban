@@ -29,14 +29,14 @@ jobs:
     steps:
       
       - name: Setup app version [condition %1]
-        if: ${{ inputs.version }} == 'v0.0.0'
+        if: ${{ inputs.version == 'v0.0.0' }}
         shell: bash
         run: |
           echo Please specify the app version. Wrong app version: ${{ inputs.version }}
           exit 1
       
       - name: Setup app version [condition %2]
-        if: ${{ inputs.version }} != 'v0.0.0'
+        if: ${{ inputs.version != 'v0.0.0' }}
         shell: bash
         run: |
           APP_VERSION=$(echo ${{ inputs.version }} | tr '[:upper:]' '[:lower:]')
