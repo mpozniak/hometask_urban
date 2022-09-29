@@ -75,7 +75,7 @@ jobs:
       - name: 'Test gcloud CLI'
         run: |
           gcloud info
-          gcloud storage buckets describe gs://${{ secret.BUCKET_NAME }} --format="default(versioning)"
+          gcloud storage buckets describe gs://${{ secrets.BUCKET_NAME }} --format="default(versioning)"
 
       # Configure Docker to use the gcloud command-line tool as a credential
       - name: Configure Dcoker AUTH
@@ -139,7 +139,7 @@ jobs:
       - name: Terraform Init
         run: |
           cd infrastructure/
-          terraform init -input=false -backend-config="bucket=${{ secret.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}/terraform.tfstate"
+          terraform init -input=false -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}/terraform.tfstate"
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
       
