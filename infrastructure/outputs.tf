@@ -39,3 +39,8 @@ output "gcp_project_environment" {
   value       = var.environment
   description = "GCP Project environment"
 }
+
+output "gcp_service_account_email" {
+  value       = google_service_account.kubernetes.email
+  description = "GCP Project service account email"
+}

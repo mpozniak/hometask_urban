@@ -1,4 +1,4 @@
-resource "kubernetes_ingress" "this" {
+resource "kubernetes_ingress_v1" "this" {
   wait_for_load_balancer = true
   metadata {
     name      = "${var.environment}-${var.application_name}-ingress"
