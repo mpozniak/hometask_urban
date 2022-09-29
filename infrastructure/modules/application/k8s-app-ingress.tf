@@ -3,18 +3,20 @@ resource "kubernetes_ingress_v1" "this" {
   metadata {
     name      = "${var.environment}-${var.application_name}-ingress"
     namespace = "${var.environment}-${var.application_name}-namespace"
-    annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-    }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       http {
         path {
           path = "/*"
           backend {
-            service_name = kubernetes_service.this.metadata.0.name
-            service_port = 80
+            service {
+              name = kubernetes_service.this.metadata.0.name
+              port {
+                number = 80
+              }
+            }
           }
         }
       }
