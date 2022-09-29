@@ -28,7 +28,7 @@ resource "kubernetes_deployment" "application" {
 
       spec {
         container {
-          image = "${var.project_container_registry_uri}/${var.application_name}:${var.application_version}"
+          image = "gcr.io/${var.gcp_project}/${var.application_name}:${var.application_version}"
           name  = var.application_name
 
           resources {
