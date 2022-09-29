@@ -2,6 +2,7 @@
 variable "gcp_region" {
   type        = string
   description = "GCP region"
+  default     = "us-west1"
 }
 
 # GCP Project name
@@ -17,10 +18,10 @@ variable "environment" {
 }
 
 # GCP auth file
-variable "gcp_auth_file" {
-  type        = string
-  description = "GCP authentication file"
-}
+# variable "gcp_auth_file" {
+#   type        = string
+#   description = "GCP authentication file"
+# }
 
 variable "k8s_cluster_subnet_ip_range" {
   type        = string
@@ -31,7 +32,7 @@ variable "k8s_cluster_subnet_ip_range" {
 variable "k8s_cluster_master_ip_range" {
   type        = string
   description = "The IP range in CIDR notation to use for hosted master network"
-  default     = "172.21.0.0/24"
+  default     = "172.21.0.0/28"
 }
 
 variable "k8s_cluster_pod_ip_range" {

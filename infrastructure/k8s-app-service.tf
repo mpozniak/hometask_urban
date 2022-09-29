@@ -8,7 +8,7 @@ resource "kubernetes_service" "this" {
       app = kubernetes_deployment.application.metadata.0.labels.app
       env = var.environment
     }
-    
+
     port {
       port        = 80
       target_port = 3000

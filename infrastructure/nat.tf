@@ -18,6 +18,7 @@ resource "google_compute_address" "nat_external_static" {
   name         = "nat"
   address_type = "EXTERNAL"
   network_tier = "PREMIUM"
+  region       = google_compute_router.this.region
 
-  depends_on = [google_project_service.compute_api]
+  # depends_on = [google_project_service.compute_api]
 }
