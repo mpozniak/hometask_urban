@@ -183,5 +183,5 @@ jobs:
           terraform apply -auto-approve
         env:
           # GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-          TF_VAR_gcp_project: ${{ secrets.PROJECT }}
+          TF_VAR_gcp_project: ${{ env.PROJECT }}
           TF_VAR_environment: ${{ needs.setup.outputs.environment }}
