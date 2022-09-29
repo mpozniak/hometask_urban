@@ -58,8 +58,3 @@ variable "app_liveness_probe_path" {
   description = "Application liveness probe path"
   default     = "/"
 }
-
-variable "project_container_registry_uri" {
-  type        = string
-  description = "The URI of the created container registry"
-}

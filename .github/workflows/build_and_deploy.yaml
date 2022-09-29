@@ -230,6 +230,8 @@ jobs:
           TF_VAR_gcp_project: ${{ env.PROJECT }}
           TF_VAR_environment: ${{ needs.setup.outputs.environment }}
           TF_VAR_tfstate_bucket_name: ${{ secrets.BUCKET_NAME }}
+          TF_VAR_application_name: ${{ env.APP_NAME }}
+          TF_VAR_application_label: ${{ env.APP_LABEL }}
           TF_VAR_application_version: ${{ needs.setup.outputs.app_version }}
 
       # Apply terraform resources
@@ -242,4 +244,6 @@ jobs:
           TF_VAR_gcp_project: ${{ env.PROJECT }}
           TF_VAR_environment: ${{ needs.setup.outputs.environment }}
           TF_VAR_tfstate_bucket_name: ${{ secrets.BUCKET_NAME }}
+          TF_VAR_application_name: ${{ env.APP_NAME }}
+          TF_VAR_application_label: ${{ env.APP_LABEL }}
           TF_VAR_application_version: ${{ needs.setup.outputs.app_version }}
