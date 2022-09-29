@@ -121,7 +121,7 @@ jobs:
 
   build_app_image:
     if: ${{ success() }}
-    needs: [deploy_infrastructure]
+    needs: [setup, deploy_infrastructure]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -177,7 +177,7 @@ jobs:
 
   deploy_application:
     if: ${{ success() }}
-    needs: [build_app_image]
+    needs: [setup, build_app_image]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
