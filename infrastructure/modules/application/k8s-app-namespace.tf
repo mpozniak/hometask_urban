@@ -8,7 +8,6 @@ resource "kubernetes_namespace" "this" {
       app = var.application_label
       env = var.environment
     }
-
     name = "${var.environment}-${var.application_name}-namespace"
   }
 }
