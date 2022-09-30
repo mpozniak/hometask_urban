@@ -5,5 +5,5 @@ output "load_balancer_hostname" {
 
 # Display load balancer IP
 output "load_balancer_ip" {
-  value = kubernetes_service_v1.example.status.0.load_balancer.0.ingress.0.ip
+  value = kubernetes_service_v1.this.status.0.load_balancer.0.ingress.0.ip
 }
