@@ -15,7 +15,7 @@ module "urban_app" {
   app_limits_memory   = "128Mi"
   app_container_port  = 3000
   app_host_port       = 80
-  gcp_region          = data.terraform_remote_state.infrastructure.outputs.gcp_region
+  gcp_region          = var.gcp_region
   gcp_project         = var.gcp_project
   environment         = var.environment
 }

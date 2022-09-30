@@ -7,8 +7,28 @@ provider "google" {
   region  = var.gcp_region
 }
 
-provider "kubernetes" {
-  host                   = "https://${data.terraform_remote_state.infrastructure.outputs.k8s_cluster_host}"
-  token                  = data.terraform_remote_state.infrastructure.outputs.k8s_cluster_token
-  cluster_ca_certificate = base64decode(data.terraform_remote_state.infrastructure.outputs.k8s_cluster_ca_certificate)
+data "google_client_config" "kubernetes" {}
+
+data "template_file" "gke_cluster_endpoint" {
+  template = data.terraform_remote_state.infrastructure.outputs.k8s_cluster_host
 }
+
+data "template_file" "access_token" {
+  template = data.google_client_config.kubernetes.access_token
+}
+
+data "template_file" "gke_cluster_ca_certificate" {
+  template = base64decode(data.terraform_remote_state.infrastructure.outputs.k8s_cluster_ca_certificate)
+}
+
+provider "kubernetes" {
+  host                   = "https://${data.template_file.gke_cluster_endpoint.rendered}"
+  token                  = data.template_file.access_token.rendered
+  cluster_ca_certificate = data.template_file.gke_cluster_ca_certificate.rendered
+}
+
+# provider "kubernetes" {
+#   host                   = "https://${data.terraform_remote_state.infrastructure.outputs.k8s_cluster_host}"
+#   token                  = data.terraform_remote_state.infrastructure.outputs.k8s_cluster_token
+#   cluster_ca_certificate = base64decode(data.terraform_remote_state.infrastructure.outputs.k8s_cluster_ca_certificate)
+# }
