@@ -26,9 +26,3 @@ provider "kubernetes" {
   token                  = data.template_file.access_token.rendered
   cluster_ca_certificate = data.template_file.gke_cluster_ca_certificate.rendered
 }
-
-# provider "kubernetes" {
-#   host                   = "https://${data.terraform_remote_state.infrastructure.outputs.k8s_cluster_host}"
-#   token                  = data.terraform_remote_state.infrastructure.outputs.k8s_cluster_token
-#   cluster_ca_certificate = base64decode(data.terraform_remote_state.infrastructure.outputs.k8s_cluster_ca_certificate)
-# }
