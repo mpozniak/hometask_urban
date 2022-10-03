@@ -2,9 +2,9 @@ name: "Build app Docker image and Deploy app"
 
 env:
   PROJECT: ${{ secrets.GCP_PROJECT }}
-  GCP_REGION: "us-west1"
-  APP_NAME: "urban"
-  APP_LABEL: "UrbanApp"
+  GCP_REGION: 'us-west1'
+  APP_NAME: 'urban'
+  APP_LABEL: 'UrbanApp'
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
       environment:
         description: "Deployment environment"
         type: choice
-        default: "development"
+        default: 'development'
         options:
           - development
           - staging
@@ -28,17 +28,19 @@ jobs:
   setup:
     name: "Prepare configuration/variables"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Setup app version [condition %1]
         if: ${{ inputs.version == 'v0.0.0' }}
-        shell: bash
         run: |
           echo Please specify the app version. Wrong app version: ${{ inputs.version }}
           exit 1
 
       - name: Setup app version [condition %2]
         if: ${{ inputs.version != 'v0.0.0' }}
-        shell: bash
         run: |
           APP_VERSION=$(echo ${{ inputs.version }} | tr '[:upper:]' '[:lower:]')
           echo The app version is: ${{ inputs.version }}
@@ -46,7 +48,6 @@ jobs:
 
       - name: Prepare outputs
         id: prepare_outputs
-        shell: bash
         run: |
           echo "::set-output name=environment::${{ inputs.environment }}"
           echo "::set-output name=app_version::${{ env.app_version }}"
@@ -55,79 +56,13 @@ jobs:
       environment: ${{ steps.prepare_outputs.outputs.environment }}
       app_version: ${{ steps.prepare_outputs.outputs.app_version }}
 
-  deploy_infrastructure:
+  build_app_image:
     if: ${{ success() }}
     needs: [setup]
     runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@master
-
-      - id: "auth"
-        uses: "google-github-actions/auth@v0"
-        with:
-          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
-
-      # Setup GCP CLI tools
-      - uses: google-github-actions/setup-gcloud@v0
-        id: setup_gcloud
-        with:
-          export_default_credentials: true
-
-      # Setup Terraform
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 1.3.0
-
-      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-      - name: Terraform Init
+    defaults:
+      run:
         shell: bash
-        run: |
-          cd infrastructure/
-          terraform init -input=false -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}-infrastructure"
-        env:
-          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
-
-      - name: Terraform validation
-        shell: bash
-        run: |
-          cd infrastructure/
-          terraform validate
-
-      # Checks that all Terraform configuration files adhere to a canonical format
-      - name: Terraform Format
-        shell: bash
-        run: |
-          cd infrastructure/
-          terraform fmt -recursive -no-color -diff -check -list=true .
-
-      # Generates an execution plan for Terraform
-      - name: Terraform Plan
-        shell: bash
-        run: |
-          cd infrastructure/
-          terraform plan -out tfplan.binary
-        env:
-          TF_VAR_gcp_project: ${{ env.PROJECT }}
-          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
-          TF_VAR_environment: ${{ needs.setup.outputs.environment }}
-
-      # Apply terraform resources
-      - name: Terraform Apply
-        shell: bash
-        run: |
-          cd infrastructure/
-          terraform apply -compact-warnings -auto-approve ./tfplan.binary
-        env:
-          TF_VAR_gcp_project: ${{ env.PROJECT }}
-          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
-          TF_VAR_environment: ${{ needs.setup.outputs.environment }}
-
-  build_app_image:
-    if: ${{ success() }}
-    needs: [setup, deploy_infrastructure]
-    runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@master
@@ -148,14 +83,12 @@ jobs:
 
       # Configure Docker to use the gcloud command-line tool as a credential
       - name: Configure Dcoker AUTH
-        shell: bash
         run: |
           gcloud --quiet auth configure-docker
 
       # Build Docker image
       - name: Build Docker image
         id: docker_build
-        shell: bash
         run: |-
           docker build \
             --tag gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${{ needs.setup.outputs.app_version }} \
@@ -165,7 +98,6 @@ jobs:
       # Push the Docker image to Google Container Registry
       - name: Push app Docker image
         id: docker_push
-        shell: bash
         run: |
           docker push gcr.io/${{ env.PROJECT }}/${{ env.APP_NAME }}:${{ needs.setup.outputs.app_version }}
 
@@ -184,6 +116,19 @@ jobs:
     if: ${{ success() }}
     needs: [setup, build_app_image]
     runs-on: ubuntu-latest
+    env:
+      TF_VAR_gcp_project: ${{ env.PROJECT }}
+      TF_VAR_gcp_region: ${{ env.GCP_REGION }}
+      TF_VAR_environment: ${{ needs.setup.outputs.environment }}
+      TF_VAR_tfstate_bucket_name: ${{ secrets.BUCKET_NAME }}
+      TF_VAR_application_name: ${{ env.APP_NAME }}
+      TF_VAR_application_label: ${{ env.APP_LABEL }}
+      TF_VAR_application_version: ${{ needs.setup.outputs.app_version }}
+    
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Check out repository
         uses: actions/checkout@master
@@ -207,52 +152,29 @@ jobs:
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
-        shell: bash
         run: |
           cd infrastructure/app-level
           terraform init -input=false -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}-application"
-        env:
-          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
 
       - name: Terraform validation
-        shell: bash
         run: |
           cd infrastructure/app-level
           terraform validate
 
       # Checks that all Terraform configuration files adhere to a canonical format
       - name: Terraform Format
-        shell: bash
         run: |
           cd infrastructure/app-level
           terraform fmt -recursive -no-color -diff -check -list=true .
 
       # Generates an execution plan for Terraform
       - name: Terraform Plan
-        shell: bash
         run: |
           cd infrastructure/app-level
           terraform plan -out tfplan.binary
-        env:
-          TF_VAR_gcp_project: ${{ env.PROJECT }}
-          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
-          TF_VAR_environment: ${{ needs.setup.outputs.environment }}
-          TF_VAR_tfstate_bucket_name: ${{ secrets.BUCKET_NAME }}
-          TF_VAR_application_name: ${{ env.APP_NAME }}
-          TF_VAR_application_label: ${{ env.APP_LABEL }}
-          TF_VAR_application_version: ${{ needs.setup.outputs.app_version }}
 
       # Apply terraform resources
       - name: Terraform Apply
-        shell: bash
         run: |
           cd infrastructure/app-level
           terraform apply -compact-warnings -auto-approve ./tfplan.binary
-        env:
-          TF_VAR_gcp_project: ${{ env.PROJECT }}
-          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
-          TF_VAR_environment: ${{ needs.setup.outputs.environment }}
-          TF_VAR_tfstate_bucket_name: ${{ secrets.BUCKET_NAME }}
-          TF_VAR_application_name: ${{ env.APP_NAME }}
-          TF_VAR_application_label: ${{ env.APP_LABEL }}
-          TF_VAR_application_version: ${{ needs.setup.outputs.app_version }}
