@@ -1,4 +1,4 @@
-name: "Terraform FMT"
+name: 'Terraform FMT (shift left: code formating check)'
 
 on:
   push:
@@ -6,6 +6,10 @@ on:
       - 'development'
       - 'task/**'
       - 'issue/**'
+    paths:
+      - 'infrastructure/**.tf'
+      - 'infrastructure/modules/application/**.tf'
+      - 'infrastructure/app-level/**.tf'
 
 jobs:
   terraform:
