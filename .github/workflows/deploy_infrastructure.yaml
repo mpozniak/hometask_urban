@@ -20,11 +20,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      TF_VAR_gcp_project: ${{ env.PROJECT }}
-      TF_VAR_gcp_region: ${ env.GCP_REGION }
-      TF_VAR_environment: ${ env.ENVIRONMENT }
-    
+
     steps:
       - name: Check out repository
         uses: actions/checkout@master
@@ -68,9 +64,18 @@ jobs:
         run: |
           cd infrastructure/
           terraform plan -out tfplan.binary
+        env:
+          TF_VAR_gcp_project: ${{ env.PROJECT }}
+          TF_VAR_gcp_region: ${ env.GCP_REGION }
+          TF_VAR_environment: ${ env.ENVIRONMENT }
+    
 
       # Apply terraform resources
       - name: Terraform Apply
         run: |
           cd infrastructure/
           terraform apply -compact-warnings -auto-approve ./tfplan.binary
+        env:
+          TF_VAR_gcp_project: ${{ env.PROJECT }}
+          TF_VAR_gcp_region: ${ env.GCP_REGION }
+          TF_VAR_environment: ${ env.ENVIRONMENT }
