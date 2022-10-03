@@ -77,6 +77,9 @@ The pipeline uses a number of variables that allow you to customize the ability 
 
 When starting the CI/CD **'Build app Docker image and Deploy app'** pipeline, you must specify the **environment** and the **version** of the application (default value is not accepted: **v0.0.0**)
 
+## App access
+You can access the application using the 'Build app Docker image and Deploy app' pipeline's output 'load_balancer_ip' parameter (for instance: load_balancer_ip = "34.82.60.243").
+
 ## 'Metrics' endpoint
 An additional '/metrics' endpoint has been added to the application using the 'prom-client' package. It can be used to collect node.js statistics and additionally, custome metric: 'responses_count' - a request counter.
 
@@ -85,3 +88,4 @@ An additional '/metrics' endpoint has been added to the application using the 'p
 - add triggers on 'main' branch tagging and use the tag to version the application (Docker image tag, k8s deployment version)
 - use separate repositories for terraform modules and use tags to determine code readiness - stable to use in production, testable in test/feature/developmen environments
 - move terraform code check from a separate GitHub action to precommit hooks - shift to the left closer to development
+- Delete all branches related to closed PRs
