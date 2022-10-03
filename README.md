@@ -63,10 +63,25 @@ GitHub Action was created as a **CI/CD** pipeline. It allows:
 - build the **Docker** image of the application, upload the image to the GS Registry
 - deploy the application image to the k8s cluster and open access to the application
 
+There are following GitHub Actions (CI/CD pipelines):
+- **Deploy GCP infrastructure** (deploy_infrastructure.yaml) - Deploy all required GCP resources in the cloud. Triggered only when changes are made to terraform files (**.tf) in the 'main' branch
+- **Build app Docker image and Deploy app** (build_and_deploy.yaml) - Build an app Docker image and deploy an image to k8s cluster. Added a security/vulnerability check for the generated final Docker image
+- **-= !!! Terraform DESTROY !!! =- (destroy all provisioned GCP resources)** (terraform_destroy.yaml) - Destroy the application deployment resources and any generated GCP resources
+- **Terraform FMT (shift left: code formating check)** (terraform_fmt.yaml) - is used to check/rewrite Terraform configuration files to a canonical format and style. This GitHub action applies a subset of the Terraform language style conventions, along with other minor adjustments for readability
+
 The pipeline uses a number of variables that allow you to customize the ability to scale the application. You can change them and add new ones for finer customization and more flexibility.
 
  - **GCP_REGION** - the variable defines the GCP region
  - **APP_NAME** - Urban application name
  - **APP_LABEL** - Urban application label
 
-When starting the CI/CD pipeline, you must specify the **environment** and the **version** of the application (default value is not accepted: **v0.0.0**)
+When starting the CI/CD **'Build app Docker image and Deploy app'** pipeline, you must specify the **environment** and the **version** of the application (default value is not accepted: **v0.0.0**)
+
+## 'Metrics' endpoint
+An additional '/metrics' endpoint has been added to the application using the 'prom-client' package. It can be used to collect node.js statistics and additionally, custome metric: 'responses_count' - a request counter.
+
+
+## Improvements
+- add triggers on 'main' branch tagging and use the tag to version the application (Docker image tag, k8s deployment version)
+- use separate repositories for terraform modules and use tags to determine code readiness - stable to use in production, testable in test/feature/developmen environments
+- move terraform code check from a separate GitHub action to precommit hooks - shift to the left closer to development
