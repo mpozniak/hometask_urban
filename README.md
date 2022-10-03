@@ -88,3 +88,4 @@ An additional '/metrics' endpoint has been added to the application using the 'p
 - add triggers on 'main' branch tagging and use the tag to version the application (Docker image tag, k8s deployment version)
 - use separate repositories for terraform modules and use tags to determine code readiness - stable to use in production, testable in test/feature/developmen environments
 - move terraform code check from a separate GitHub action to precommit hooks - shift to the left closer to development
+- Delete all branches related to closed PRs
