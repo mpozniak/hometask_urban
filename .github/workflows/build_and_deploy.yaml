@@ -2,9 +2,9 @@ name: "Build app Docker image and Deploy app"
 
 env:
   PROJECT: ${{ secrets.GCP_PROJECT }}
-  GCP_REGION: "us-west1"
-  APP_NAME: "urban"
-  APP_LABEL: "UrbanApp"
+  GCP_REGION: 'us-west1'
+  APP_NAME: 'urban'
+  APP_LABEL: 'UrbanApp'
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
       environment:
         description: "Deployment environment"
         type: choice
-        default: "development"
+        default: 'development'
         options:
           - development
           - staging
@@ -116,9 +116,6 @@ jobs:
     if: ${{ success() }}
     needs: [setup, build_app_image]
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     env:
       TF_VAR_gcp_project: ${{ env.PROJECT }}
       TF_VAR_gcp_region: ${{ env.GCP_REGION }}
@@ -127,6 +124,10 @@ jobs:
       TF_VAR_application_name: ${{ env.APP_NAME }}
       TF_VAR_application_label: ${{ env.APP_LABEL }}
       TF_VAR_application_version: ${{ needs.setup.outputs.app_version }}
+
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Check out repository
@@ -154,8 +155,6 @@ jobs:
         run: |
           cd infrastructure/app-level
           terraform init -input=false -backend-config="bucket=${{ secrets.BUCKET_NAME }}" -backend-config="prefix=${{ env.PROJECT }}-${{ needs.setup.outputs.environment }}-application"
-        env:
-          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
 
       - name: Terraform validation
         run: |
