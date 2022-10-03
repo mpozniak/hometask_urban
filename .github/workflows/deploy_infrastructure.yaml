@@ -1,3 +1,5 @@
+name: Deploy GCP infrastructure
+
 env:
   PROJECT: ${{ secrets.GCP_PROJECT }}
   GCP_REGION: 'us-west1'
