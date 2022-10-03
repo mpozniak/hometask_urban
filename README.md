@@ -77,6 +77,9 @@ The pipeline uses a number of variables that allow you to customize the ability 
 
 When starting the CI/CD **'Build app Docker image and Deploy app'** pipeline, you must specify the **environment** and the **version** of the application (default value is not accepted: **v0.0.0**)
 
+## App access
+You can access the application using the 'Build app Docker image and Deploy app' pipeline's output 'load_balancer_ip' parameter (for instance: load_balancer_ip = "34.82.60.243").
+
 ## 'Metrics' endpoint
 An additional '/metrics' endpoint has been added to the application using the 'prom-client' package. It can be used to collect node.js statistics and additionally, custome metric: 'responses_count' - a request counter.
 
