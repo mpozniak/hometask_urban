@@ -67,8 +67,8 @@ jobs:
           terraform plan -out tfplan.binary
         env:
           TF_VAR_gcp_project: ${{ env.PROJECT }}
-          TF_VAR_gcp_region: ${ env.GCP_REGION }
-          TF_VAR_environment: ${ env.ENVIRONMENT }
+          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
     
 
       # Apply terraform resources
@@ -78,5 +78,5 @@ jobs:
           terraform apply -compact-warnings -auto-approve ./tfplan.binary
         env:
           TF_VAR_gcp_project: ${{ env.PROJECT }}
-          TF_VAR_gcp_region: ${ env.GCP_REGION }
-          TF_VAR_environment: ${ env.ENVIRONMENT }
+          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
+          TF_VAR_environment: ${{ env.ENVIRONMENT }}
