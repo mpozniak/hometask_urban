@@ -41,11 +41,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      TF_VAR_gcp_project: ${{ env.PROJECT }}
-      TF_VAR_gcp_region: ${{ env.GCP_REGION }}
-      TF_VAR_environment: ${{ needs.setup.outputs.environment }}
-      TF_VAR_tfstate_bucket_name: ${{ secrets.BUCKET_NAME }}
     
     steps:
       - name: Check out repository
@@ -79,6 +74,11 @@ jobs:
         run: |
           cd infrastructure/app-level/
           terraform apply -destroy -auto-approve
+        env:
+          TF_VAR_gcp_project: ${{ env.PROJECT }}
+          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
+          TF_VAR_environment: ${{ needs.setup.outputs.environment }}
+          TF_VAR_tfstate_bucket_name: ${{ secrets.BUCKET_NAME }}
 
   destroy_infrastructure:
     if: ${{ success() }}
@@ -87,10 +87,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      TF_VAR_gcp_project: ${{ env.PROJECT }}
-      TF_VAR_gcp_region: ${{ env.GCP_REGION }}
-      TF_VAR_environment: ${{ needs.setup.outputs.environment }}
     
     steps:
       - name: Check out repository
@@ -124,3 +120,7 @@ jobs:
         run: |
           cd infrastructure/
           terraform apply -destroy -auto-approve
+        env:
+          TF_VAR_gcp_project: ${{ env.PROJECT }}
+          TF_VAR_gcp_region: ${{ env.GCP_REGION }}
+          TF_VAR_environment: ${{ needs.setup.outputs.environment }}
